@@ -122,7 +122,8 @@ app.post('/charge', async (req, res) => {
             // Add the invoice item to the invoice
             await stripe.invoiceItems.create({
                 invoice: invoice.id,
-                customer: customer.id
+                customer: customer.id,
+                amount: Math.round(parseFloat(amount) * 100)
             });
 
             // Send the invoice
