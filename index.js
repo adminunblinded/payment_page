@@ -99,6 +99,7 @@ app.post('/charge', async (req, res) => {
         for (let i = 0; i < numberOfPayments; i++) {
             const invoiceDate = new Date(startDateObj);
             invoiceDate.setMonth(startDateObj.getMonth() + i);
+            const daysUntilDue = 30 * (i + 1); // Increase by 30 days for each subsequent invoice
 
             // Create invoice item
             await stripe.invoiceItems.create({
@@ -112,12 +113,11 @@ app.post('/charge', async (req, res) => {
             const invoice = await stripe.invoices.create({
                 customer: customer.id,
                 collection_method: 'send_invoice',
-                days_until_due: 30,
+                days_until_due: daysUntilDue,
                 description: `Payment for ${product}`,
                 metadata: {
                     oppId: oppId // Include oppId in the metadata
                 },
-                due_date: Math.floor(invoiceDate.getTime() / 1000) // Convert milliseconds to seconds
             });
 
             // Send the invoice
