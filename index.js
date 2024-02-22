@@ -92,11 +92,21 @@ app.post('/charge', async (req, res) => {
 
         const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
       
+        // Check if the product exists, if not, create it
+        let stripeProduct;
+        try {
+            stripeProduct = await stripe.products.retrieve(product);
+        } catch (error) {
+            stripeProduct = await stripe.products.create({
+                name: product,
+            });
+        }
+
         // Create a price for the product
         const price = await stripe.prices.create({
             unit_amount: Math.round(parseFloat(amount) * 100),
             currency: 'usd',
-            product: product, // Use the product name as a string
+            product: stripeProduct.id,
         });
 
         // Calculate interval and create invoice items and invoices
@@ -140,6 +150,7 @@ app.post('/charge', async (req, res) => {
         res.status(500).json({ status: 'error', error: error.message });
     }
 });
+
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
