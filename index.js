@@ -47,7 +47,7 @@ const postToChatter = async (accessToken, salesforceAccountId, product, amount) 
 
 app.post('/charge', async (req, res) => {
     try {
-        const { token, amount, email, firstName, lastName, product, oppId } = req.body;
+        const { token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments } = req.body;
         const salesforceAccessToken = await getSalesforceAccessToken();
 
         // Check if the customer already exists
@@ -63,6 +63,7 @@ app.post('/charge', async (req, res) => {
                 name: `${firstName} ${lastName}`,
             });
         }
+
         // Create a PaymentMethod using the token
         const paymentMethod = await stripe.paymentMethods.create({
             type: 'card',
@@ -75,11 +76,9 @@ app.post('/charge', async (req, res) => {
         await stripe.paymentMethods.attach(paymentMethod.id, {
             customer: customer.id,
         });
-
-        const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
       
-        // Create a PaymentIntent using the attached PaymentMethod
-        const paymentIntent = await stripe.paymentIntents.create({
+        // Charge the customer once
+        await stripe.paymentIntents.create({
             amount: Math.round(parseFloat(amount) * 100),
             currency: 'usd',
             customer: customer.id,
@@ -91,11 +90,33 @@ app.post('/charge', async (req, res) => {
             }
         });
 
+        const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
+      
+        // Calculate interval and create subscription
+        const startDateObj = new Date(startDate);
+        const interval = 'month';
+        const invoices = [];
+        for (let i = 0; i < numberOfPayments; i++) {
+            const invoiceDate = new Date(startDateObj);
+            invoiceDate.setMonth(startDateObj.getMonth() + i);
+            const invoice = await stripe.invoices.create({
+                customer: customer.id,
+                amount: Math.round(parseFloat(amount) * 100),
+                currency: 'usd',
+                description: `Payment for ${product}`,
+                metadata: {
+                    oppId: oppId // Include oppId in the metadata
+                },
+                due_date: Math.floor(invoiceDate.getTime() / 1000) // Convert milliseconds to seconds
+            });
+            invoices.push(invoice);
+        }
+
         if (salesforceAccountId) {
             await postToChatter(salesforceAccessToken, salesforceAccountId, product, amount);
         }
 
-        res.json({ status: 'success', paymentIntentId: paymentIntent.id });
+        res.json({ status: 'success', invoices: invoices.map(inv => inv.id) });
     } catch (error) {
         res.status(500).json({ status: 'error', error: error.message });
     }
