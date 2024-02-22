@@ -121,8 +121,7 @@ app.post('/charge', async (req, res) => {
 
             // Add the invoice item to the invoice
             await stripe.invoiceItems.create({
-                invoice: invoice.id,
-                price: invoiceItem.id,
+                invoice: invoice.id
             });
 
             // Send the invoice
