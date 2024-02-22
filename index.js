@@ -92,22 +92,21 @@ app.post('/charge', async (req, res) => {
 
         const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
       
-        // Calculate interval and create invoice items and invoices
+        // Create a single invoice item
+        const invoiceItem = await stripe.invoiceItems.create({
+            customer: customer.id,
+            amount: Math.round(parseFloat(amount) * 100),
+            currency: 'usd',
+            description: `Payment for ${product}`,
+        });
+
+        // Calculate interval and create invoices
         const startDateObj = new Date(startDate);
-        const interval = 'month';
         const invoices = [];
         for (let i = 0; i < numberOfPayments; i++) {
             const invoiceDate = new Date(startDateObj);
             invoiceDate.setMonth(startDateObj.getMonth() + i);
             const daysUntilDue = 30 * (i + 1); // Increase by 30 days for each subsequent invoice
-
-            // Create invoice item
-            await stripe.invoiceItems.create({
-                customer: customer.id,
-                amount: Math.round(parseFloat(amount) * 100),
-                currency: 'usd',
-                description: `Payment for ${product}`,
-            });
 
             // Create invoice
             const invoice = await stripe.invoices.create({
@@ -118,6 +117,12 @@ app.post('/charge', async (req, res) => {
                 metadata: {
                     oppId: oppId // Include oppId in the metadata
                 },
+            });
+
+            // Add the invoice item to the invoice
+            await stripe.invoiceItems.create({
+                invoice: invoice.id,
+                price: invoiceItem.id,
             });
 
             // Send the invoice
