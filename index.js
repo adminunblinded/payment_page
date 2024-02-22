@@ -47,7 +47,7 @@ const postToChatter = async (accessToken, salesforceAccountId, product, amount) 
 
 app.post('/charge', async (req, res) => {
     try {
-        const { token, amount, email, firstName, lastName, product } = req.body;
+        const { token, amount, email, firstName, lastName, product, oppId } = req.body;
         const salesforceAccessToken = await getSalesforceAccessToken();
 
         // Check if the customer already exists
@@ -85,7 +85,10 @@ app.post('/charge', async (req, res) => {
             customer: customer.id,
             payment_method: paymentMethod.id,
             confirm: true, // Automatically confirm the PaymentIntent
-            description: `Payment for ${product}`
+            description: `Payment for ${product}`,
+            metadata: {
+                oppId: oppId // Include oppId in the metadata
+            }
         });
 
         if (salesforceAccountId) {
