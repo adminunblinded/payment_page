@@ -96,7 +96,7 @@ app.post('/charge', async (req, res) => {
         const price = await stripe.prices.create({
             unit_amount: Math.round(parseFloat(amount) * 100),
             currency: 'usd',
-            product: {name: product},
+            product: product, // Use the product name as a string
         });
 
         // Calculate interval and create invoice items and invoices
