@@ -47,7 +47,7 @@ const postToChatter = async (accessToken, salesforceAccountId, product, amount) 
 
 app.post('/charge', async (req, res) => {
     try {
-        const { token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments } = req.body;
+        const { token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount} = req.body;
         const salesforceAccessToken = await getSalesforceAccessToken();
 
         // Check if the customer already exists
@@ -104,7 +104,7 @@ app.post('/charge', async (req, res) => {
 
         // Create a price for the product
         const price = await stripe.prices.create({
-            unit_amount: Math.round(parseFloat(amount) * 100),
+            unit_amount: Math.round(parseFloat(recurringAmount) * 100),
             currency: 'usd',
             product: stripeProduct.id,
         });
