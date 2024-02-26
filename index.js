@@ -97,6 +97,7 @@ app.post('/charge', async (req, res) => {
         });
 
         const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
+        let invoices = [];
       
         if (numberOfPayments && numberOfPayments > 1) {
             // Check if the product exists, if not, create it
@@ -147,11 +148,9 @@ app.post('/charge', async (req, res) => {
                 invoices.push(invoice);
             }
         }
-        
         if (salesforceAccountId) {
             await postToChatter(salesforceAccessToken, salesforceAccountId, product, amount);
         }
-
         res.json({ status: 'success', invoices: invoices.map(inv => inv.id) });
     } catch (error) {
         res.status(500).json({ status: 'error', error: error.message });
