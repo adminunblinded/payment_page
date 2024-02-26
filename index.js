@@ -119,7 +119,6 @@ app.post('/charge', async (req, res) => {
             // Calculate interval and create invoice items and invoices
             const startDateObj = new Date(startDate);
             const interval = 'month';
-            const invoices = [];
             for (let i = 0; i < numberOfPayments; i++) {
                 const invoiceDate = new Date(startDateObj);
                 invoiceDate.setMonth(startDateObj.getMonth() + i);
@@ -158,7 +157,6 @@ app.post('/charge', async (req, res) => {
         res.status(500).json({ status: 'error', error: error.message });
     }
 });
-
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
