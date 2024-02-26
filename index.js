@@ -167,7 +167,7 @@ app.post('/charge', async (req, res) => {
                 invoices.push(invoice);
             }
         }
-      
+
         // If Salesforce account exists, post to Chatter
         if (salesforceAccountId) {
             await postToChatter(salesforceAccessToken, salesforceAccountId, product, amount);
