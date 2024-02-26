@@ -40,9 +40,15 @@ const postToChatter = async (accessToken, salesforceAccountId, product, amount) 
         subjectId: salesforceAccountId,
         visibility: 'AllUsers',
     };
-    await axios.post('https://unblindedmastery.my.salesforce.com/services/data/v58.0/chatter/feed-elements/', payload, {
-        headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-    });
+    
+    try {
+        await axios.post('https://unblindedmastery.my.salesforce.com/services/data/v58.0/chatter/feed-elements/', payload, {
+            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        });
+        console.log('Posted to Chatter successfully');
+    } catch (error) {
+        console.error('Failed to post to Chatter:', error.message);
+    }
 };
 
 app.post('/charge', async (req, res) => {
