@@ -73,15 +73,18 @@ app.post('/charge', async (req, res) => {
         // Create a PaymentMethod using the token
         const paymentMethod = await stripe.paymentMethods.create({
             type: 'card',
-            card: {
-                token: token,
-            },
+            card: { token },
+        });
+      
+        const existingPaymentMethods = await stripe.paymentMethods.list({
+            customer: customer.id,
+            type: 'card',
         });
 
-        // Attach the PaymentMethod to the customer
-        await stripe.paymentMethods.attach(paymentMethod.id, {
-            customer: customer.id,
-        });
+        let existingMethod = existingPaymentMethods.data.find(pm => pm.card.fingerprint === paymentMethod.card.fingerprint);
+        if (!existingMethod) {
+            existingMethod = await stripe.paymentMethods.attach(paymentMethod.id, { customer: customer.id });
+        }
 
         // Charge the customer once
         await stripe.paymentIntents.create({
