@@ -53,13 +53,13 @@ const postToChatter = async (accessToken, salesforceAccountId, product, amount) 
 
 app.post('/charge', async (req, res) => {
     try {
-        const { token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount} = req.body;
+        const { token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount } = req.body;
         const salesforceAccessToken = await getSalesforceAccessToken();
 
         // Check if the customer already exists
         const customers = await stripe.customers.list({ email, limit: 1 });
         let customer;
-      
+
         if (customers.data.length > 0) {
             customer = customers.data[0];
         } else {
@@ -70,18 +70,36 @@ app.post('/charge', async (req, res) => {
             });
         }
 
-        // Create a PaymentMethod using the token
-        const paymentMethod = await stripe.paymentMethods.create({
+        // Check if the customer already has a payment method with the same card details
+        let paymentMethod;
+        const existingPaymentMethods = await stripe.paymentMethods.list({
+            customer: customer.id,
             type: 'card',
-            card: {
-                token: token,
-            },
         });
 
-        // Attach the PaymentMethod to the customer
-        await stripe.paymentMethods.attach(paymentMethod.id, {
-            customer: customer.id,
-        });
+        for (const pm of existingPaymentMethods.data) {
+            const pmDetails = await stripe.paymentMethods.retrieve(pm.id);
+            if (pmDetails.card.fingerprint === token) {
+                paymentMethod = pm;
+                break;
+            }
+        }
+
+        // If no existing payment method matches, create a new one
+        if (!paymentMethod) {
+            // Create a PaymentMethod using the token
+            paymentMethod = await stripe.paymentMethods.create({
+                type: 'card',
+                card: {
+                    token: token,
+                },
+            });
+
+            // Attach the PaymentMethod to the customer
+            await stripe.paymentMethods.attach(paymentMethod.id, {
+                customer: customer.id,
+            });
+        }
 
         // Charge the customer once
         await stripe.paymentIntents.create({
@@ -98,7 +116,8 @@ app.post('/charge', async (req, res) => {
 
         const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
         let invoices = [];
-      
+
+        // If there are multiple payments, create invoices
         if (numberOfPayments && numberOfPayments > 1) {
             // Check if the product exists, if not, create it
             let stripeProduct;
@@ -109,14 +128,14 @@ app.post('/charge', async (req, res) => {
                     name: product,
                 });
             }
-        
+
             // Create a price for the product
             const price = await stripe.prices.create({
                 unit_amount: Math.round(parseFloat(recurringAmount) * 100),
                 currency: 'usd',
                 product: stripeProduct.id,
             });
-        
+
             // Calculate interval and create invoice items and invoices
             const startDateObj = new Date(startDate);
             const interval = 'month';
@@ -124,13 +143,13 @@ app.post('/charge', async (req, res) => {
                 const invoiceDate = new Date(startDateObj);
                 invoiceDate.setMonth(startDateObj.getMonth() + i);
                 const daysUntilDue = 30 * (i + 1); // Increase by 30 days for each subsequent invoice
-        
+
                 // Create invoice item
                 await stripe.invoiceItems.create({
                     customer: customer.id,
                     price: price.id,
                 });
-        
+
                 // Create invoice
                 const invoice = await stripe.invoices.create({
                     customer: customer.id,
@@ -141,16 +160,19 @@ app.post('/charge', async (req, res) => {
                         oppId: oppId // Include oppId in the metadata
                     },
                 });
-        
+
                 // Send the invoice
                 await stripe.invoices.sendInvoice(invoice.id);
-        
+
                 invoices.push(invoice);
             }
         }
+      
+        // If Salesforce account exists, post to Chatter
         if (salesforceAccountId) {
             await postToChatter(salesforceAccessToken, salesforceAccountId, product, amount);
         }
+
         res.json({ status: 'success', invoices: invoices.map(inv => inv.id) });
     } catch (error) {
         res.status(500).json({ status: 'error', error: error.message });
