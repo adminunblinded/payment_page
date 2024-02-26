@@ -98,55 +98,57 @@ app.post('/charge', async (req, res) => {
 
         const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
       
-        // Check if the product exists, if not, create it
-        let stripeProduct;
-        try {
-            stripeProduct = await stripe.products.retrieve(product);
-        } catch (error) {
-            stripeProduct = await stripe.products.create({
-                name: product,
+        if (numberOfPayments && numberOfPayments > 1) {
+            // Check if the product exists, if not, create it
+            let stripeProduct;
+            try {
+                stripeProduct = await stripe.products.retrieve(product);
+            } catch (error) {
+                stripeProduct = await stripe.products.create({
+                    name: product,
+                });
+            }
+        
+            // Create a price for the product
+            const price = await stripe.prices.create({
+                unit_amount: Math.round(parseFloat(recurringAmount) * 100),
+                currency: 'usd',
+                product: stripeProduct.id,
             });
+        
+            // Calculate interval and create invoice items and invoices
+            const startDateObj = new Date(startDate);
+            const interval = 'month';
+            const invoices = [];
+            for (let i = 0; i < numberOfPayments; i++) {
+                const invoiceDate = new Date(startDateObj);
+                invoiceDate.setMonth(startDateObj.getMonth() + i);
+                const daysUntilDue = 30 * (i + 1); // Increase by 30 days for each subsequent invoice
+        
+                // Create invoice item
+                await stripe.invoiceItems.create({
+                    customer: customer.id,
+                    price: price.id,
+                });
+        
+                // Create invoice
+                const invoice = await stripe.invoices.create({
+                    customer: customer.id,
+                    collection_method: 'send_invoice',
+                    days_until_due: daysUntilDue,
+                    description: `Payment for ${product}`,
+                    metadata: {
+                        oppId: oppId // Include oppId in the metadata
+                    },
+                });
+        
+                // Send the invoice
+                await stripe.invoices.sendInvoice(invoice.id);
+        
+                invoices.push(invoice);
+            }
         }
-
-        // Create a price for the product
-        const price = await stripe.prices.create({
-            unit_amount: Math.round(parseFloat(recurringAmount) * 100),
-            currency: 'usd',
-            product: stripeProduct.id,
-        });
-
-        // Calculate interval and create invoice items and invoices
-        const startDateObj = new Date(startDate);
-        const interval = 'month';
-        const invoices = [];
-        for (let i = 0; i < numberOfPayments; i++) {
-            const invoiceDate = new Date(startDateObj);
-            invoiceDate.setMonth(startDateObj.getMonth() + i);
-            const daysUntilDue = 30 * (i + 1); // Increase by 30 days for each subsequent invoice
-
-            // Create invoice item
-            await stripe.invoiceItems.create({
-                customer: customer.id,
-                price: price.id,
-            });
-
-            // Create invoice
-            const invoice = await stripe.invoices.create({
-                customer: customer.id,
-                collection_method: 'send_invoice',
-                days_until_due: daysUntilDue,
-                description: `Payment for ${product}`,
-                metadata: {
-                    oppId: oppId // Include oppId in the metadata
-                },
-            });
-
-            // Send the invoice
-            await stripe.invoices.sendInvoice(invoice.id);
-
-            invoices.push(invoice);
-        }
-
+        
         if (salesforceAccountId) {
             await postToChatter(salesforceAccessToken, salesforceAccountId, product, amount);
         }
