@@ -70,16 +70,18 @@ app.post('/charge', async (req, res) => {
             });
         }
 
-        // Check if the customer already has a payment method with the same card details
+        // Check if the customer already has a payment method with the same card number
         let paymentMethod;
         const existingPaymentMethods = await stripe.paymentMethods.list({
             customer: customer.id,
             type: 'card',
         });
 
+        const tokenCard = await stripe.tokens.retrieve(token);
+
         for (const pm of existingPaymentMethods.data) {
             const pmDetails = await stripe.paymentMethods.retrieve(pm.id);
-            if (pmDetails.card.fingerprint === token) {
+            if (pmDetails.card.last4 === tokenCard.card.last4 && pmDetails.card.brand === tokenCard.card.brand) {
                 paymentMethod = pm;
                 break;
             }
