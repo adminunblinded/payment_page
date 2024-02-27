@@ -155,10 +155,13 @@ async function processPayment(token, amount, email, firstName, lastName, product
 
             // Create a price for the product
             const price = await stripe.prices.create({
-                unit_amount: Math.round(parseFloat(recurringAmount) * 100),
-                currency: 'usd',
-                product: stripeProduct.id,
-            });
+              unit_amount: Math.round(parseFloat(recurringAmount) * 100),
+              currency: 'usd',
+              recurring: {
+                  interval: 'month', // or any other interval as needed
+              },
+              product: stripeProduct.id,
+          });
 
             // Calculate interval and create subscription
             const interval = 'month';
