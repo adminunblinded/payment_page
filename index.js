@@ -84,8 +84,6 @@ app.post('/charge', async (req, res) => {
 
 async function processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken) {
     const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
-    let invoices = [];
-
     // Check if the customer already exists
     const customers = await stripe.customers.list({ email, limit: 1 });
     let customer;
