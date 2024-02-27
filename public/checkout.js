@@ -1,3 +1,23 @@
+  let currentStep = 1;
+
+  function nextStep(step) {
+    if (step === currentStep) {
+      document.getElementById('step' + currentStep).style.display = 'none';
+      currentStep++;
+      document.getElementById('step' + currentStep).style.display = 'block';
+    }
+  }
+
+  function toggleRecurringOptions() {
+    let checkbox = document.getElementById('recurringPayments');
+    let options = document.getElementById('recurringOptions');
+    if (checkbox.checked) {
+      options.style.display = 'block';
+    } else {
+      options.style.display = 'none';
+    }
+  }
+
 document.addEventListener("DOMContentLoaded", function() {
   // Initialize Stripe.js
   var stripe = Stripe('pk_test_dnxIicCufTTvDdOvJJQmsGIt');
