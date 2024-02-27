@@ -178,18 +178,10 @@
 
   <div class="step" id="step3">
     <h2>Step 3: Payment Information</h2>
-    <div class="input-group">
-    <label for="cardNumber">Card Number:</label>
-    <div id="cardNumberElement" class="stripe-element"></div>
-    </div>
-    <div class="input-group">
-    <label for="expirationDate">Expiration Date:</label>
-    <div id="cardExpiryElement" class="stripe-element"></div>
-    </div>
-    <div class="input-group">
-    <label for="cvc">CVC:</label>
-    <div id="cardCvcElement" class="stripe-element"></div>
-    </div>
+    <!-- Stripe Elements for card number, CVC, and expiration date -->
+    <div id="cardNumberElement"></div>
+    <div id="cardCvcElement"></div>
+    <div id="cardExpiryElement"></div>
     <button type="button" onclick="nextStep(3)">Next</button>
   </div>
 
