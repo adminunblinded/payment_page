@@ -19,28 +19,18 @@ const salesforceCredentials = {
 };
 
 const getSalesforceAccessToken = async () => {
-    try {
-        const { data } = await axios.post('https://login.salesforce.com/services/oauth2/token', null, {
-            params: { grant_type: 'password', ...salesforceCredentials },
-        });
-        return data.access_token;
-    } catch (error) {
-        console.error('Failed to get Salesforce access token:', error.message);
-        return null; // Return null to indicate failure
-    }
+    const { data } = await axios.post('https://login.salesforce.com/services/oauth2/token', null, {
+        params: { grant_type: 'password', ...salesforceCredentials },
+    });
+    return data.access_token;
 };
 
 const getSalesforceAccountId = async (accessToken, email) => {
-    try {
-        const query = `SELECT Id FROM Account WHERE Email__c='${email}'`;
-        const { data } = await axios.get(`https://unblindedmastery.my.salesforce.com/services/data/v58.0/query/?q=${encodeURIComponent(query)}`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        return data.records.length > 0 ? data.records[0].Id : null;
-    } catch (error) {
-        console.error('Failed to get Salesforce account ID:', error.message);
-        return null; // Return null to indicate failure
-    }
+    const query = `SELECT Id FROM Account WHERE Email__c='${email}'`;
+    const { data } = await axios.get(`https://unblindedmastery.my.salesforce.com/services/data/v58.0/query/?q=${encodeURIComponent(query)}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return data.records.length > 0 ? data.records[0].Id : null;
 };
 
 const postToChatter = async (accessToken, salesforceAccountId, product, amount) => {
@@ -193,3 +183,4 @@ async function processPayment(token, amount, email, firstName, lastName, product
         // If an error occurs during payment processing, invoke the callback function with the error
         callback(error);
     }
+}
