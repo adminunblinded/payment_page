@@ -14,6 +14,10 @@ document.addEventListener("DOMContentLoaded", function() {
       '::placeholder': {
         color: '#999999',
       },
+      padding: '12px', // Add padding
+      borderRadius: '10px', // Add border radius
+      backgroundColor: '#f5f5f5', // Add background color
+      transition: 'background-color 0.3s, border-color 0.3s', // Add transition
     },
   };
 
