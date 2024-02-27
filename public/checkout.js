@@ -5,16 +5,28 @@ document.addEventListener("DOMContentLoaded", function() {
   // Create an instance of Elements
   var elements = stripe.elements();
 
-  // Create and mount the card number Element
-  var cardNumberElement = elements.create('cardNumber');
+  // Create a style object for the Stripe elements
+  var style = {
+    base: {
+      fontSize: '16px',
+      fontFamily: 'Arial, sans-serif',
+      color: '#333333',
+      '::placeholder': {
+        color: '#999999',
+      },
+    },
+  };
+
+  // Create and mount the card number Element with custom style
+  var cardNumberElement = elements.create('cardNumber', { style: style });
   cardNumberElement.mount('#cardNumberElement');
 
-  // Create and mount the CVC Element
-  var cardCvcElement = elements.create('cardCvc');
+  // Create and mount the CVC Element with custom style
+  var cardCvcElement = elements.create('cardCvc', { style: style });
   cardCvcElement.mount('#cardCvcElement');
 
-  // Create and mount the expiration date Element
-  var cardExpiryElement = elements.create('cardExpiry');
+  // Create and mount the expiration date Element with custom style
+  var cardExpiryElement = elements.create('cardExpiry', { style: style });
   cardExpiryElement.mount('#cardExpiryElement');
 
   // Function to toggle recurring payment options
