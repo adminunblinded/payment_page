@@ -66,130 +66,123 @@ app.post('/charge', async (req, res) => {
         const { token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount} = req.body;
         const salesforceAccessToken = await getSalesforceAccessToken();
 
-        // Immediately acknowledge receipt of the payment request
-        res.json({ status: 'processing', message: 'Payment processing in progress...' });
-
         // Process the payment asynchronously
-        processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken)
-            .then(invoices => {
-                res.json({ status: 'success', invoices });
-            })
-            .catch(error => {
-                res.status(500).json({ status: 'error', error: error.message });
-            });
+        const invoices = await processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken);
+
+        // Send the response
+        res.json({ status: 'success', invoices });
     } catch (error) {
         res.status(500).json({ status: 'error', error: error.message });
     }
 });
 
 async function processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
-  
-            // Check if the customer already exists
-            const customers = await stripe.customers.list({ email, limit: 1 });
-            let customer;
+    try {
+        const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
+        let invoices = [];
 
-            if (customers.data.length > 0) {
-                customer = customers.data[0];
-            } else {
-                // Create a new customer without attaching the source (payment method)
-                customer = await stripe.customers.create({
-                    email,
-                    name: `${firstName} ${lastName}`,
-                });
-            }
+        // Check if the customer already exists
+        const customers = await stripe.customers.list({ email, limit: 1 });
+        let customer;
 
-            // Create a PaymentMethod using the token
-            const paymentMethod = await stripe.paymentMethods.create({
-                type: 'card',
-                card: { token },
+        if (customers.data.length > 0) {
+            customer = customers.data[0];
+        } else {
+            // Create a new customer without attaching the source (payment method)
+            customer = await stripe.customers.create({
+                email,
+                name: `${firstName} ${lastName}`,
             });
-
-            const existingPaymentMethods = await stripe.paymentMethods.list({
-                customer: customer.id,
-                type: 'card',
-            });
-
-            let existingMethod = existingPaymentMethods.data.find(pm => pm.card.fingerprint === paymentMethod.card.fingerprint);
-            if (!existingMethod) {
-                existingMethod = await stripe.paymentMethods.attach(paymentMethod.id, { customer: customer.id });
-            }
-
-            // Charge the customer once
-            await stripe.paymentIntents.create({
-                amount: Math.round(parseFloat(amount) * 100),
-                currency: 'usd',
-                customer: customer.id,
-                payment_method: paymentMethod.id,
-                confirm: true, // Automatically confirm the PaymentIntent
-                description: `Payment for ${product}`,
-                metadata: {
-                    oppId: oppId // Include oppId in the metadata
-                }
-            });
-
-            if (numberOfPayments && numberOfPayments > 1) {
-                // Check if the product exists, if not, create it
-                let stripeProduct;
-                try {
-                    stripeProduct = await stripe.products.retrieve(product);
-                } catch (error) {
-                    stripeProduct = await stripe.products.create({
-                        name: product,
-                    });
-                }
-
-                // Create a price for the product
-                const price = await stripe.prices.create({
-                    unit_amount: Math.round(parseFloat(recurringAmount) * 100),
-                    currency: 'usd',
-                    product: stripeProduct.id,
-                });
-
-                // Calculate interval and create invoice items and invoices
-                const startDateObj = new Date(startDate);
-                const interval = 'month';
-                for (let i = 0; i < numberOfPayments; i++) {
-                    const invoiceDate = new Date(startDateObj);
-                    invoiceDate.setMonth(startDateObj.getMonth() + i);
-                    const daysUntilDue = 30 * (i + 1); // Increase by 30 days for each subsequent invoice
-
-                    // Create invoice item
-                    await stripe.invoiceItems.create({
-                        customer: customer.id,
-                        price: price.id,
-                    });
-
-                    // Create invoice
-                    const invoice = await stripe.invoices.create({
-                        customer: customer.id,
-                        collection_method: 'send_invoice',
-                        days_until_due: daysUntilDue,
-                        description: `Payment for ${product}`,
-                        metadata: {
-                            oppId: oppId // Include oppId in the metadata
-                        },
-                    });
-
-                    // Send the invoice
-                    await stripe.invoices.sendInvoice(invoice.id);
-
-                    invoices.push(invoice);
-                }
-            }
-
-            // If there is a Salesforce account ID, post payment details to Chatter
-            if (salesforceAccountId) {
-                await postToChatter(salesforceAccessToken, salesforceAccountId, product, amount);
-            }
-
-            resolve(invoices);
-        } catch (error) {
-            reject(error);
         }
-    });
+
+        // Create a PaymentMethod using the token
+        const paymentMethod = await stripe.paymentMethods.create({
+            type: 'card',
+            card: { token },
+        });
+
+        const existingPaymentMethods = await stripe.paymentMethods.list({
+            customer: customer.id,
+            type: 'card',
+        });
+
+        let existingMethod = existingPaymentMethods.data.find(pm => pm.card.fingerprint === paymentMethod.card.fingerprint);
+        if (!existingMethod) {
+            existingMethod = await stripe.paymentMethods.attach(paymentMethod.id, { customer: customer.id });
+        }
+
+        // Charge the customer once
+        await stripe.paymentIntents.create({
+            amount: Math.round(parseFloat(amount) * 100),
+            currency: 'usd',
+            customer: customer.id,
+            payment_method: paymentMethod.id,
+            confirm: true, // Automatically confirm the PaymentIntent
+            description: `Payment for ${product}`,
+            metadata: {
+                oppId: oppId // Include oppId in the metadata
+            }
+        });
+
+        if (numberOfPayments && numberOfPayments > 1) {
+            // Check if the product exists, if not, create it
+            let stripeProduct;
+            try {
+                stripeProduct = await stripe.products.retrieve(product);
+            } catch (error) {
+                stripeProduct = await stripe.products.create({
+                    name: product,
+                });
+            }
+
+            // Create a price for the product
+            const price = await stripe.prices.create({
+                unit_amount: Math.round(parseFloat(recurringAmount) * 100),
+                currency: 'usd',
+                product: stripeProduct.id,
+            });
+
+            // Calculate interval and create invoice items and invoices
+            const startDateObj = new Date(startDate);
+            const interval = 'month';
+            for (let i = 0; i < numberOfPayments; i++) {
+                const invoiceDate = new Date(startDateObj);
+                invoiceDate.setMonth(startDateObj.getMonth() + i);
+                const daysUntilDue = 30 * (i + 1); // Increase by 30 days for each subsequent invoice
+
+                // Create invoice item
+                await stripe.invoiceItems.create({
+                    customer: customer.id,
+                    price: price.id,
+                });
+
+                // Create invoice
+                const invoice = await stripe.invoices.create({
+                    customer: customer.id,
+                    collection_method: 'send_invoice',
+                    days_until_due: daysUntilDue,
+                    description: `Payment for ${product}`,
+                    metadata: {
+                        oppId: oppId // Include oppId in the metadata
+                    },
+                });
+
+                // Send the invoice
+                await stripe.invoices.sendInvoice(invoice.id);
+
+                invoices.push(invoice);
+            }
+        }
+
+        // If there is a Salesforce account ID, post payment details to Chatter
+        if (salesforceAccountId) {
+            await postToChatter(salesforceAccessToken, salesforceAccountId, product, amount);
+        }
+
+        return invoices;
+    } catch (error) {
+        throw error;
+    }
 }
 
 app.listen(port, () => {
