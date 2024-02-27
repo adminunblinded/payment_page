@@ -7,150 +7,162 @@
 <style>
 /* Resetting some default styles */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-  
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+form {
+  background-color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  max-width: 500px;
+  width: 90%;
+}
+
+.step {
+  display: none;
+}
+
+.step:first-child {
+  display: block;
+}
+
+h2 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #333333;
+  text-align: center;
+}
+
+label {
+  font-size: 18px;
+  color: #555555;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+input[type="checkbox"],
+textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: none;
+  border-radius: 10px;
+  background-color: #f5f5f5;
+  font-size: 16px;
+  color: #333333;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+textarea:focus {
+  outline: none;
+  background-color: #e0e0e0;
+}
+
+button[type="button"] {
+  background-color: #ff9900;
+  color: white;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.3s;
+  display: block;
+  margin: 0 auto;
+}
+
+button[type="button"]:hover {
+  background-color: #ff6600;
+}
+
+input[type="checkbox"] {
+  display: inline-block;
+  width: auto;
+  margin-right: 10px;
+}
+
+#recurringOptions label {
+  display: block;
+  margin-top: 15px;
+  color: #666666;
+  font-size: 18px;
+}
+
+#recurringOptions input {
+  width: calc(100% - 30px);
+  padding: 15px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  font-size: 18px;
+  color: #333333;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+#recurringOptions input:focus {
+  outline: none;
+  background-color: #e0e0e0;
+}
+
+/* Add spacing between input fields */
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+textarea,
+#cardNumberElement,
+#cardCvcElement,
+#cardExpiryElement {
+  margin-bottom: 15px;
+}
+
+@media screen and (max-width: 600px) {
   form {
-    background-color: #ffffff;
-    border-radius: 20px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    padding: 30px;
-    max-width: 500px;
-    width: 90%;
+    padding: 20px;
   }
-  
-  .step {
-    display: none;
-  }
-  
-  .step:first-child {
-    display: block;
-  }
-  
+
   h2 {
-    font-size: 28px;
-    margin-bottom: 20px;
-    color: #333333;
-    text-align: center;
+    font-size: 24px;
   }
-  
+
   label {
-    font-size: 18px;
-    color: #555555;
+    font-size: 16px;
   }
-  
+
   input[type="text"],
   input[type="email"],
   input[type="number"],
   input[type="date"],
-  input[type="checkbox"],
   textarea {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
-    border: none;
-    border-radius: 10px;
-    background-color: #f5f5f5;
-    font-size: 16px;
-    color: #333333;
-    transition: background-color 0.3s, border-color 0.3s;
+    padding: 10px;
+    font-size: 14px;
   }
-  
-  input[type="text"]:focus,
-  input[type="email"]:focus,
-  input[type="number"]:focus,
-  input[type="date"]:focus,
-  textarea:focus {
-    outline: none;
-    background-color: #e0e0e0;
-  }
-  
+
   button[type="button"] {
-    background-color: #ff9900;
-    color: white;
-    padding: 16px 24px;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    font-size: 18px;
-    transition: background-color 0.3s;
-    display: block;
-    margin: 0 auto;
+    padding: 14px 20px;
+    font-size: 16px;
   }
-  
-  button[type="button"]:hover {
-    background-color: #ff6600;
-  }
-  
-  input[type="checkbox"] {
-    display: inline-block;
-    width: auto;
-    margin-right: 10px;
-  }
-  
-  #recurringOptions label {
-    display: block;
-    margin-top: 15px;
-    color: #666666;
-    font-size: 18px;
-  }
-  
-  #recurringOptions input {
-    width: calc(100% - 30px);
-    padding: 15px;
-    margin-top: 8px;
-    border: none;
-    border-radius: 8px;
-    background-color: #f5f5f5;
-    font-size: 18px;
-    color: #333333;
-    transition: background-color 0.3s, border-color 0.3s;
-  }
-  
-  #recurringOptions input:focus {
-    outline: none;
-    background-color: #e0e0e0;
-  }
-  
-  @media screen and (max-width: 600px) {
-    form {
-      padding: 20px;
-    }
-  
-    h2 {
-      font-size: 24px;
-    }
-  
-    label {
-      font-size: 16px;
-    }
-  
-    input[type="text"],
-    input[type="email"],
-    input[type="number"],
-    input[type="date"],
-    textarea {
-      padding: 10px;
-      font-size: 14px;
-    }
-  
-    button[type="button"] {
-      padding: 14px 20px;
-      font-size: 16px;
-    }
-  }
-  
+}
+    
 </style>
 </head>
 <body>
