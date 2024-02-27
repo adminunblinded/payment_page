@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout Form</title>
+<style>
+/* Resetting some default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  form {
+    background-color: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+  }
+  
+  .step {
+    display: none;
+  }
+  
+  .step:first-child {
+    display: block;
+  }
+  
+  h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #333333;
+    text-align: center;
+  }
+  
+  label {
+    font-size: 18px;
+    color: #555555;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="date"],
+  input[type="checkbox"],
+  textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 10px;
+    background-color: #f5f5f5;
+    font-size: 16px;
+    color: #333333;
+    transition: background-color 0.3s, border-color 0.3s;
+  }
+  
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="number"]:focus,
+  input[type="date"]:focus,
+  textarea:focus {
+    outline: none;
+    background-color: #e0e0e0;
+  }
+  
+  button[type="button"] {
+    background-color: #ff9900;
+    color: white;
+    padding: 16px 24px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: background-color 0.3s;
+    display: block;
+    margin: 0 auto;
+  }
+  
+  button[type="button"]:hover {
+    background-color: #ff6600;
+  }
+  
+  input[type="checkbox"] {
+    display: inline-block;
+    width: auto;
+    margin-right: 10px;
+  }
+  
+  #recurringOptions label {
+    display: block;
+    margin-top: 15px;
+    color: #666666;
+    font-size: 18px;
+  }
+  
+  #recurringOptions input {
+    width: calc(100% - 30px);
+    padding: 15px;
+    margin-top: 8px;
+    border: none;
+    border-radius: 8px;
+    background-color: #f5f5f5;
+    font-size: 18px;
+    color: #333333;
+    transition: background-color 0.3s, border-color 0.3s;
+  }
+  
+  #recurringOptions input:focus {
+    outline: none;
+    background-color: #e0e0e0;
+  }
+  
+  @media screen and (max-width: 600px) {
+    form {
+      padding: 20px;
+    }
+  
+    h2 {
+      font-size: 24px;
+    }
+  
+    label {
+      font-size: 16px;
+    }
+  
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    input[type="date"],
+    textarea {
+      padding: 10px;
+      font-size: 14px;
+    }
+  
+    button[type="button"] {
+      padding: 14px 20px;
+      font-size: 16px;
+    }
+  }
+  
+</style>
+</head>
+<body>
+
+<form id="checkoutForm" action="#" method="post">
+  <div class="step" id="step1">
+    <h2>Step 1: Personal Information</h2>
+    <label for="cardHolderName">Card Holder Name:</label><br>
+    <input type="text" id="cardHolderName" name="cardHolderName" required><br>
+    <label for="email">Email:</label><br>
+    <input type="email" id="email" name="email" required><br>
+    <button type="button" onclick="nextStep(1)">Next</button>
+  </div>
+
+  <div class="step" id="step2">
+    <h2>Step 2: Product Information</h2>
+    <label for="product">Product:</label><br>
+    <input type="text" id="product" name="product" required><br>
+    <label for="amount">Amount:</label><br>
+    <input type="number" id="amount" name="amount" required><br>
+    <label for="description">Description:</label><br>
+    <textarea id="description" name="description" required></textarea><br>
+    <button type="button" onclick="nextStep(2)">Next</button>
+  </div>
+
+  <div class="step" id="step3">
+    <h2>Step 3: Payment Information</h2>
+    <!-- Stripe Elements for card number, CVC, and expiration date -->
+    <div id="cardNumberElement"></div>
+    <div id="cardCvcElement"></div>
+    <div id="cardExpiryElement"></div>
+    <button type="button" onclick="nextStep(3)">Next</button>
+  </div>
+
+  <div class="step" id="step4">
+    <h2>Step 4: Recurring Payments (Optional)</h2>
+    <label for="recurringPayments">Enable Recurring Payments:</label>
+    <input type="checkbox" id="recurringPayments" name="recurringPayments" onchange="toggleRecurringOptions()"><br>
+    <div id="recurringOptions" style="display: none;">
+      <label for="numberOfPayments">Number of Payments:</label><br>
+      <input type="number" id="numberOfPayments" name="numberOfPayments"><br>
+      <label for="startDate">Start Date:</label><br>
+      <input type="date" id="startDate" name="startDate"><br>
+      <label for="recurringPaymentAmount">Recurring Payment Amount:</label><br>
+      <input type="number" id="recurringPaymentAmount" name="recurringPaymentAmount"><br>
+    </div>
+    <button type="button" onclick="nextStep(4)">Submit</button>
+  </div>
+
+</form>
+
+<script src="https://js.stripe.com/v3/"></script>
+
+<script>
+  let currentStep = 1;
+  
+  function nextStep(step) {
+    if (step === currentStep) {
+      document.getElementById('step' + currentStep).style.display = 'none';
+      currentStep++;
+      document.getElementById('step' + currentStep).style.display = 'block';
+    }
+  }
+
+  function toggleRecurringOptions() {
+    let checkbox = document.getElementById('recurringPayments');
+    let options = document.getElementById('recurringOptions');
+    if (checkbox.checked) {
+      options.style.display = 'block';
+    } else {
+      options.style.display = 'none';
+    }
+  }
+</script>
+
+</body>
+</html>
