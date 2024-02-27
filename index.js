@@ -3,12 +3,22 @@ const bodyParser = require('body-parser');
 const stripe = require('stripe')(process.env.SECRETKEY);
 const cors = require('cors');
 const axios = require('axios');
+const path = require('path');
+
 
 const app = express();
 const port = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
+
+app.use(express.static('public'));
+
+app.get('/payment', (req, res) => {
+  // Serve the payment.html file when the /payment route is accessed
+  res.sendFile(path.join(__dirname, 'public', 'payment.html'));
+});
+
 
 const salesforceCredentials = {
   client_id: '3MVG9p1Q1BCe9GmBa.vd3k6U6tisbR1DMPjMzaiBN7xn.uqsguNxOYdop1n5P_GB1yHs3gzBQwezqI6q37bh9', // Replace with your Salesforce Consumer Key
