@@ -55,13 +55,8 @@ const postToChatter = async (accessToken, salesforceAccountId, product, amount) 
 app.post('/charge', async (req, res) => {
     try {
         const { token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount} = req.body;
-        let salesforceAccessToken;
-        try {
-            salesforceAccessToken = await getSalesforceAccessToken();
-        } catch (accessTokenError) {
-            console.error("Error obtaining Salesforce access token:", accessTokenError);
-        }
-      
+        const salesforceAccessToken = await getSalesforceAccessToken();
+
         // Immediately acknowledge receipt of the payment request
         res.json({ status: 'processing', message: 'Payment processing in progress...' });
 
