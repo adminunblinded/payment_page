@@ -88,6 +88,8 @@ app.post('/charge', async (req, res) => {
         res.status(500).json({ status: 'error', error: error.message });
     }
 });
+
+
 async function processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken, callback) {
     try {
         let invoices = [];
@@ -157,10 +159,12 @@ async function processPayment(token, amount, email, firstName, lastName, product
                 unit_amount: Math.round(parseFloat(recurringAmount) * 100),
                 currency: 'usd',
                 product: stripeProduct.id,
-                recurring: { // Set the price type to recurring
-                    interval: 'month', // Adjust this interval according to your needs
-                }
+                recurring: { interval: 'month' } // Set the interval for the subscription
             });
+
+            // Calculate the start date and billing cycle anchor in UTC format
+            const startDateUTC = new Date(startDate).toISOString();
+            const billingCycleAnchorUTC = new Date(startDate).toISOString();
 
             // Create subscription for the customer
             const subscription = await stripe.subscriptions.create({
@@ -168,7 +172,8 @@ async function processPayment(token, amount, email, firstName, lastName, product
                 items: [{
                     price: price.id,
                 }],
-                billing_cycle_anchor: Math.floor(new Date(startDate).getTime() / 1000), // Anchor the billing cycle to the start date
+                start_date: startDateUTC, // Set the start date
+                billing_cycle_anchor: billingCycleAnchorUTC, // Set the billing cycle anchor
                 metadata: {
                     oppId: oppId // Include oppId in the metadata
                 },
@@ -176,6 +181,7 @@ async function processPayment(token, amount, email, firstName, lastName, product
 
             invoices.push(subscription);
         }
+
         // If there is a Salesforce account ID, post payment details to Chatter
         if (salesforceAccountId) {
             await postToChatter(salesforceAccessToken, salesforceAccountId, product, amount);
