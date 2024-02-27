@@ -89,7 +89,6 @@ app.post('/charge', async (req, res) => {
     }
 });
 
-
 async function processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken, callback) {
     try {
         let invoices = [];
@@ -159,27 +158,26 @@ async function processPayment(token, amount, email, firstName, lastName, product
                 unit_amount: Math.round(parseFloat(recurringAmount) * 100),
                 currency: 'usd',
                 product: stripeProduct.id,
-                recurring: { interval: 'month' } // Set the interval for the subscription
             });
 
-            // Calculate the start date and billing cycle anchor in UTC format
-            const startDateUTC = new Date(startDate).toISOString();
-            const billingCycleAnchorUTC = new Date(startDate).toISOString();
+            // Calculate interval and create subscription
+            const interval = 'month';
+            const trialEnd = new Date(startDate);
+            trialEnd.setMonth(trialEnd.getMonth() + numberOfPayments); // Set trial end based on number of payments
 
-            // Create subscription for the customer
             const subscription = await stripe.subscriptions.create({
                 customer: customer.id,
-                items: [{
-                    price: price.id,
-                }],
-                start_date: startDateUTC, // Set the start date
-                billing_cycle_anchor: billingCycleAnchorUTC, // Set the billing cycle anchor
+                items: [{ price: price.id }],
+                trial_end: Math.floor(trialEnd.getTime() / 1000), // Convert trial end to Unix timestamp
                 metadata: {
                     oppId: oppId // Include oppId in the metadata
                 },
             });
 
-            invoices.push(subscription);
+            // Retrieve invoices generated for the subscription
+            invoices = await stripe.invoices.list({
+                subscription: subscription.id,
+            });
         }
 
         // If there is a Salesforce account ID, post payment details to Chatter
