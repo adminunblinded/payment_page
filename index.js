@@ -76,8 +76,7 @@ app.post('/charge', async (req, res) => {
                 return;
             }
             console.log("Payment processing completed in the background.");
-            // Respond to the client once payment processing is complete
-            res.json({ status: 'success', invoices });
+            console.log("Invoices:", invoices);
         });
 
     } catch (error) {
