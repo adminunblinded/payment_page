@@ -25,7 +25,6 @@
     <input type="number" id="amount" name="amount" required><br>
     <label for="description">Description:</label><br>
     <textarea id="description" name="description" required></textarea><br>
-    <button type="button" onclick="previousStep(1)" class="button previous-button">Previous</button>
     <button type="button" onclick="nextStep(2)">Next</button>
   </div>
 
@@ -35,7 +34,6 @@
     <div id="cardNumberElement"></div>
     <div id="cardCvcElement"></div>
     <div id="cardExpiryElement"></div>
-    <button type="button" onclick="previousStep(2)" class="button previous-button">Previous</button>
     <button type="button" onclick="nextStep(3)">Next</button>
   </div>
 
@@ -68,14 +66,7 @@
       document.getElementById('step' + currentStep).style.display = 'block';
     }
   }
-  function previousStep(step) {
-  if (step === currentStep && currentStep > 1) {
-    document.getElementById('step' + currentStep).style.display = 'none';
-    currentStep--;
-    document.getElementById('step' + currentStep).style.display = 'block';
-    }
-  }
-
+ 
   function toggleRecurringOptions() {
     let checkbox = document.getElementById('recurringPayments');
     let options = document.getElementById('recurringOptions');
