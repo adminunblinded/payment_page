@@ -56,7 +56,7 @@ app.post('/charge', async (req, res) => {
     try {
         const { token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount} = req.body;
         try {
-            salesforceAccessToken = await getSalesforceAccessToken();
+            let salesforceAccessToken = await getSalesforceAccessToken();
         } catch (accessTokenError) {
             console.error("Error obtaining Salesforce access token:", accessTokenError);
         }
