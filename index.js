@@ -91,9 +91,14 @@ app.post('/charge', async (req, res) => {
 
 async function processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken, callback) {
     try {
-        const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
         let invoices = [];
-
+        let salesforceAccountId;
+        try {
+            salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
+        } catch (accountIdError) {
+            console.error("Error obtaining Salesforce access token:", accessTokenError);
+        }
+      
         // Check if the customer already exists
         const customers = await stripe.customers.list({ email, limit: 1 });
         let customer;
