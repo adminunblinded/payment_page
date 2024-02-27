@@ -5,20 +5,11 @@ const cors = require('cors');
 const axios = require('axios');
 const path = require('path');
 
-
 const app = express();
 const port = 3000;
 
 app.use(cors());
 app.use(bodyParser.json());
-
-app.use(express.static('public'));
-
-app.get('/payment', (req, res) => {
-  // Serve the payment.html file when the /payment route is accessed
-  res.sendFile(path.join(__dirname, 'public', 'payment.html'));
-});
-
 
 const salesforceCredentials = {
   client_id: '3MVG9p1Q1BCe9GmBa.vd3k6U6tisbR1DMPjMzaiBN7xn.uqsguNxOYdop1n5P_GB1yHs3gzBQwezqI6q37bh9', // Replace with your Salesforce Consumer Key
@@ -64,8 +55,11 @@ const postToChatter = async (accessToken, salesforceAccountId, product, amount) 
 app.post('/charge', async (req, res) => {
     try {
         const { token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount} = req.body;
-        const salesforceAccessToken = await getSalesforceAccessToken();
-
+        try {
+            salesforceAccessToken = await getSalesforceAccessToken();
+        } catch (accessTokenError) {
+            console.error("Error obtaining Salesforce access token:", accessTokenError);
+        }
         // Immediately acknowledge receipt of the payment request
         res.json({ status: 'processing', message: 'Payment processing in progress...' });
 
@@ -86,9 +80,14 @@ app.post('/charge', async (req, res) => {
 
 async function processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken, callback) {
     try {
-        const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
+      
+        try {
+            const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
+        } catch (accountIdError) {
+            console.error("Error obtaining Salesforce account ID:", accountIdError);
+        }
+      
         let invoices = [];
-
         // Check if the customer already exists
         const customers = await stripe.customers.list({ email, limit: 1 });
         let customer;
@@ -185,7 +184,6 @@ async function processPayment(token, amount, email, firstName, lastName, product
         if (salesforceAccountId) {
             await postToChatter(salesforceAccessToken, salesforceAccountId, product, amount);
         }
-
         // Once payment processing is complete, invoke the callback function
         callback(null, invoices);
     } catch (error) {
