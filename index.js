@@ -19,18 +19,28 @@ const salesforceCredentials = {
 };
 
 const getSalesforceAccessToken = async () => {
-    const { data } = await axios.post('https://login.salesforce.com/services/oauth2/token', null, {
-        params: { grant_type: 'password', ...salesforceCredentials },
-    });
-    return data.access_token;
+    try {
+        const { data } = await axios.post('https://login.salesforce.com/services/oauth2/token', null, {
+            params: { grant_type: 'password', ...salesforceCredentials },
+        });
+        return data.access_token;
+    } catch (error) {
+        console.error('Failed to get Salesforce access token:', error.message);
+        return null; // Return null to indicate failure
+    }
 };
 
 const getSalesforceAccountId = async (accessToken, email) => {
-    const query = `SELECT Id FROM Account WHERE Email__c='${email}'`;
-    const { data } = await axios.get(`https://unblindedmastery.my.salesforce.com/services/data/v58.0/query/?q=${encodeURIComponent(query)}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    return data.records.length > 0 ? data.records[0].Id : null;
+    try {
+        const query = `SELECT Id FROM Account WHERE Email__c='${email}'`;
+        const { data } = await axios.get(`https://unblindedmastery.my.salesforce.com/services/data/v58.0/query/?q=${encodeURIComponent(query)}`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        return data.records.length > 0 ? data.records[0].Id : null;
+    } catch (error) {
+        console.error('Failed to get Salesforce account ID:', error.message);
+        return null; // Return null to indicate failure
+    }
 };
 
 const postToChatter = async (accessToken, salesforceAccountId, product, amount) => {
@@ -55,11 +65,8 @@ const postToChatter = async (accessToken, salesforceAccountId, product, amount) 
 app.post('/charge', async (req, res) => {
     try {
         const { token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount} = req.body;
-        try {
-            let salesforceAccessToken = await getSalesforceAccessToken();
-        } catch (accessTokenError) {
-            console.error("Error obtaining Salesforce access token:", accessTokenError);
-        }
+        const salesforceAccessToken = await getSalesforceAccessToken();
+
         // Immediately acknowledge receipt of the payment request
         res.json({ status: 'processing', message: 'Payment processing in progress...' });
 
@@ -80,14 +87,9 @@ app.post('/charge', async (req, res) => {
 
 async function processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken, callback) {
     try {
-      
-        try {
-            const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
-        } catch (accountIdError) {
-            console.error("Error obtaining Salesforce account ID:", accountIdError);
-        }
-      
+        const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
         let invoices = [];
+
         // Check if the customer already exists
         const customers = await stripe.customers.list({ email, limit: 1 });
         let customer;
@@ -184,14 +186,10 @@ async function processPayment(token, amount, email, firstName, lastName, product
         if (salesforceAccountId) {
             await postToChatter(salesforceAccessToken, salesforceAccountId, product, amount);
         }
+
         // Once payment processing is complete, invoke the callback function
         callback(null, invoices);
     } catch (error) {
         // If an error occurs during payment processing, invoke the callback function with the error
         callback(error);
     }
-}
-
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
-});
