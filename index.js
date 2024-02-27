@@ -66,17 +66,26 @@ app.post('/charge', async (req, res) => {
         const { token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount} = req.body;
         const salesforceAccessToken = await getSalesforceAccessToken();
 
-        // Process the payment asynchronously
-        const invoices = await processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken);
+        // Immediately acknowledge receipt of the payment request
+        res.json({ status: 'processing', message: 'Payment processing in progress...' });
 
-        // Send the response
-        res.json({ status: 'success', invoices });
+        // Process the payment asynchronously without waiting for it to finish
+        processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken, (err, invoices) => {
+            if (err) {
+                console.error("Error processing payment:", err);
+                return;
+            }
+            console.log("Payment processing completed in the background.");
+            // Respond to the client once payment processing is complete
+            res.json({ status: 'success', invoices });
+        });
+
     } catch (error) {
         res.status(500).json({ status: 'error', error: error.message });
     }
 });
 
-async function processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken) {
+async function processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken, callback) {
     try {
         const salesforceAccountId = await getSalesforceAccountId(salesforceAccessToken, email);
         let invoices = [];
@@ -173,15 +182,16 @@ async function processPayment(token, amount, email, firstName, lastName, product
                 invoices.push(invoice);
             }
         }
-
         // If there is a Salesforce account ID, post payment details to Chatter
         if (salesforceAccountId) {
             await postToChatter(salesforceAccessToken, salesforceAccountId, product, amount);
         }
 
-        return invoices;
+        // Once payment processing is complete, invoke the callback function
+        callback(null, invoices);
     } catch (error) {
-        throw error;
+        // If an error occurs during payment processing, invoke the callback function with the error
+        callback(error);
     }
 }
 
