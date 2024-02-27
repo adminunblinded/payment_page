@@ -150,6 +150,27 @@
       font-size: 16px;
     }
   }
+    #cardNumberElement,
+    #cardCvcElement,
+    #cardExpiryElement {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: none;
+      border-radius: 10px;
+      background-color: #f5f5f5;
+      font-size: 16px;
+      color: #333333;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+    
+    #cardNumberElement:focus,
+    #cardCvcElement:focus,
+    #cardExpiryElement:focus {
+      outline: none;
+      background-color: #e0e0e0;
+    }
+
   
 </style>
 </head>
