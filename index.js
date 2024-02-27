@@ -88,7 +88,6 @@ app.post('/charge', async (req, res) => {
         res.status(500).json({ status: 'error', error: error.message });
     }
 });
-
 async function processPayment(token, amount, email, firstName, lastName, product, oppId, startDate, numberOfPayments, recurringAmount, salesforceAccessToken, callback) {
     try {
         let invoices = [];
@@ -158,6 +157,9 @@ async function processPayment(token, amount, email, firstName, lastName, product
                 unit_amount: Math.round(parseFloat(recurringAmount) * 100),
                 currency: 'usd',
                 product: stripeProduct.id,
+                recurring: { // Set the price type to recurring
+                    interval: 'month', // Adjust this interval according to your needs
+                }
             });
 
             // Create subscription for the customer
