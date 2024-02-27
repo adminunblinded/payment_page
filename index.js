@@ -160,36 +160,19 @@ async function processPayment(token, amount, email, firstName, lastName, product
                 product: stripeProduct.id,
             });
 
-            // Calculate interval and create invoice items and invoices
-            const startDateObj = new Date(startDate);
-            const interval = 'month';
-            for (let i = 0; i < numberOfPayments; i++) {
-                const invoiceDate = new Date(startDateObj);
-                invoiceDate.setMonth(startDateObj.getMonth() + i);
-                const daysUntilDue = 30 * (i + 1); // Increase by 30 days for each subsequent invoice
-
-                // Create invoice item
-                await stripe.invoiceItems.create({
-                    customer: customer.id,
+            // Create subscription for the customer
+            const subscription = await stripe.subscriptions.create({
+                customer: customer.id,
+                items: [{
                     price: price.id,
-                });
+                }],
+                billing_cycle_anchor: Math.floor(new Date(startDate).getTime() / 1000), // Anchor the billing cycle to the start date
+                metadata: {
+                    oppId: oppId // Include oppId in the metadata
+                },
+            });
 
-                // Create invoice
-                const invoice = await stripe.invoices.create({
-                    customer: customer.id,
-                    collection_method: 'send_invoice',
-                    days_until_due: daysUntilDue,
-                    description: `Payment for ${product}`,
-                    metadata: {
-                        oppId: oppId // Include oppId in the metadata
-                    },
-                });
-
-                // Send the invoice
-                await stripe.invoices.sendInvoice(invoice.id);
-
-                invoices.push(invoice);
-            }
+            invoices.push(subscription);
         }
         // If there is a Salesforce account ID, post payment details to Chatter
         if (salesforceAccountId) {
