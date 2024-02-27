@@ -5,12 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="styles.css">
 <title>Checkout Form</title>
-<style>
-  .button-container {
-    display: flex;
-    justify-content: space-between;
-  }
-</style>
 </head>
 <body>
 <form id="checkoutForm" action="#" method="post">
@@ -20,9 +14,7 @@
     <input type="text" id="cardHolderName" name="cardHolderName" required><br>
     <label for="email">Email:</label><br>
     <input type="email" id="email" name="email" required><br>
-    <div class="button-container">
-      <button type="button" onclick="nextStep(1)">Next</button>
-    </div>
+    <button type="button" onclick="nextStep(1)">Next</button>
   </div>
 
   <div class="step" id="step2">
@@ -33,10 +25,7 @@
     <input type="number" id="amount" name="amount" required><br>
     <label for="description">Description:</label><br>
     <textarea id="description" name="description" required></textarea><br>
-    <div class="button-container">
-      <button type="button" onclick="prevStep(2)">Previous</button>
-      <button type="button" onclick="nextStep(2)">Next</button>
-    </div>
+    <button type="button" onclick="nextStep(2)">Next</button>
   </div>
 
   <div class="step" id="step3">
@@ -45,10 +34,7 @@
     <div id="cardNumberElement"></div>
     <div id="cardCvcElement"></div>
     <div id="cardExpiryElement"></div>
-    <div class="button-container">
-      <button type="button" onclick="prevStep(3)">Previous</button>
-      <button type="button" onclick="nextStep(3)">Next</button>
-    </div>
+    <button type="button" onclick="nextStep(3)">Next</button>
   </div>
 
   <div class="step" id="step4">
@@ -63,10 +49,7 @@
       <label for="recurringPaymentAmount">Recurring Payment Amount:</label><br>
       <input type="number" id="recurringPaymentAmount" name="recurringPaymentAmount"><br>
     </div>
-    <div class="button-container">
-      <button type="button" onclick="prevStep(4)">Previous</button>
-      <button type="button" onclick="nextStep(4)">Submit</button>
-    </div>
+    <button type="button" onclick="nextStep(4)">Submit</button>
   </div>
 
 </form>
@@ -80,14 +63,6 @@
     if (step === currentStep) {
       document.getElementById('step' + currentStep).style.display = 'none';
       currentStep++;
-      document.getElementById('step' + currentStep).style.display = 'block';
-    }
-  }
-
-  function prevStep(step) {
-    if (step === currentStep) {
-      document.getElementById('step' + currentStep).style.display = 'none';
-      currentStep--;
       document.getElementById('step' + currentStep).style.display = 'block';
     }
   }
