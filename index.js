@@ -164,8 +164,7 @@ async function processPayment(token, amount, email, firstName, lastName, product
             });
 
 
-            const startingdate = "2024-02-29";
-            const start = new Date(startingdate + "T00:00:00Z"); // Ensures correct parsing with time set to 00:00:00 UTC
+            const start = new Date(startDate + "T00:00:00Z"); // Ensures correct parsing with time set to 00:00:00 UTC
             const endDate = new Date(start);
             const nuofPayments = 3;
 
