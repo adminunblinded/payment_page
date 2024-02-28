@@ -163,7 +163,7 @@ async function processPayment(token, amount, email, firstName, lastName, product
               product: stripeProduct.id,
           });
 
-            const startDate = new Date(startingDate);
+            const startDate = new Date(startDate);
             const trialEnd = new Date(startDate);
             trialEnd.setMonth(trialEnd.getMonth() + numberOfPayments); // Set trial end based on number of payments
 
