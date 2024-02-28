@@ -163,8 +163,7 @@ async function processPayment(token, amount, email, firstName, lastName, product
               product: stripeProduct.id,
           });
 
-            // Calculate interval and create subscription
-            const interval = 'month';
+            const startDate = new Date(startingDate);
             const trialEnd = new Date(startDate);
             trialEnd.setMonth(trialEnd.getMonth() + numberOfPayments); // Set trial end based on number of payments
 
