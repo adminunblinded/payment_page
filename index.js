@@ -163,14 +163,14 @@ async function processPayment(token, amount, email, firstName, lastName, product
               product: stripeProduct.id,
           });
 
-            const startDate = new Date(startDate);
+            const start = new Date(startDate);
             const trialEnd = new Date(startDate);
             trialEnd.setMonth(trialEnd.getMonth() + numberOfPayments); // Set trial end based on number of payments
 
             const subscription = await stripe.subscriptions.create({
                 customer: customer.id,
                 items: [{ price: price.id }],
-                billing_cycle_anchor: Math.floor(startDate.getTime() / 1000),
+                billing_cycle_anchor: Math.floor(start.getTime() / 1000),
                 trial_end: Math.floor(trialEnd.getTime() / 1000), // Convert trial end to Unix timestamp
                 metadata: {
                     oppId: oppId // Include oppId in the metadata
