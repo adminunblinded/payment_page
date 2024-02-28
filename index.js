@@ -163,25 +163,22 @@ async function processPayment(token, amount, email, firstName, lastName, product
               product: stripeProduct.id,
           });
 
-            const start = new Date(startDate);
-            const endDate = new Date(startDate); // Clone the start date
-            endDate.setMonth(endDate.getMonth() + numberOfPayments);
-
-            const subscription = await stripe.subscriptions.create({
-                customer: customer.id,
-                items: [{ price: price.id }],
-                default_payment_method: existingMethod.id,
-                cancel_at: Math.floor(endDate.getTime() / 1000), // Set the end date
-                metadata: {
-                    oppId: oppId // Include oppId in the metadata
-                },
-            });
+           
+          const start = new Date(startDate);
+          const endDate = new Date(start);
+          endDate.setMonth(endDate.getMonth() + numberOfPayments);
           
-            // Retrieve invoices generated for the subscription
-            invoices = await stripe.invoices.list({
-                subscription: subscription.id,
-            });
-        }
+          // Instead of setting billing_cycle_anchor, consider using trial_end for future start (if needed)
+          // For now, we focus on setting cancel_at accurately
+          const subscription = await stripe.subscriptions.create({
+              customer: customer.id,
+              items: [{ price: price.id }],
+              default_payment_method: existingMethod.id,
+              cancel_at: Math.floor(endDate.getTime() / 1000), // Accurately set based on your needs
+              metadata: {
+                  oppId: oppId,
+              },
+          });
       
         // If there is a Salesforce account ID, post payment details to Chatter
         if (salesforceAccountId) {
