@@ -171,7 +171,7 @@ async function processPayment(token, amount, email, firstName, lastName, product
             const subscription = await stripe.subscriptions.create({
                 customer: customer.id,
                 items: [{ price: price.id }],
-                billing_cycle_anchor: Math.floor(startDate.getTime() / 1000)
+                billing_cycle_anchor: Math.floor(startDate.getTime() / 1000),
                 trial_end: Math.floor(trialEnd.getTime() / 1000), // Convert trial end to Unix timestamp
                 metadata: {
                     oppId: oppId // Include oppId in the metadata
