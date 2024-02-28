@@ -171,7 +171,6 @@ async function processPayment(token, amount, email, firstName, lastName, product
                 customer: customer.id,
                 items: [{ price: price.id }],
                 default_payment_method: existingMethod.id,
-                billing_cycle_anchor: Math.floor(start.getTime() / 1000), // Set the start date
                 cancel_at: Math.floor(endDate.getTime() / 1000), // Set the end date
                 metadata: {
                     oppId: oppId // Include oppId in the metadata
