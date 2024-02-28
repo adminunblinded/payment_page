@@ -98,7 +98,7 @@ async function processPayment(token, amount, email, firstName, lastName, product
         } catch (accountIdError) {
             console.error("Error obtaining Salesforce access token:", accessTokenError);
         }
-      
+
         // Check if the customer already exists
         const customers = await stripe.customers.list({ email, limit: 1 });
         let customer;
@@ -155,31 +155,37 @@ async function processPayment(token, amount, email, firstName, lastName, product
 
             // Create a price for the product
             const price = await stripe.prices.create({
-              unit_amount: Math.round(parseFloat(recurringAmount) * 100),
-              currency: 'usd',
-              recurring: {
-                  interval: 'month', // or any other interval as needed
-              },
-              product: stripeProduct.id,
-          });
+                unit_amount: Math.round(parseFloat(recurringAmount) * 100),
+                currency: 'usd',
+                recurring: {
+                    interval: 'month', // or any other interval as needed
+                },
+                product: stripeProduct.id,
+            });
 
-           
-          const start = new Date(startDate);
-          const endDate = new Date(start);
-          endDate.setMonth(endDate.getMonth() + numberOfPayments);
-          
-          // Instead of setting billing_cycle_anchor, consider using trial_end for future start (if needed)
-          // For now, we focus on setting cancel_at accurately
-          const subscription = await stripe.subscriptions.create({
-              customer: customer.id,
-              items: [{ price: price.id }],
-              default_payment_method: existingMethod.id,
-              cancel_at: Math.floor(endDate.getTime() / 1000), // Accurately set based on your needs
-              metadata: {
-                  oppId: oppId,
-              },
-          });
-      
+            const start = new Date(startDate + "T00:00:00Z"); // Ensures correct parsing with time set to 00:00:00 UTC
+            const endDate = new Date(start);
+
+            // Correctly add numberOfPayments months to the startDate
+            endDate.setMonth(endDate.getMonth() + numberOfPayments);
+
+            // Stripe requires UNIX timestamps in seconds
+            const billing_cycle_anchor = Math.floor(start.getTime() / 1000);
+            const cancel_at = Math.floor(endDate.getTime() / 1000); // Ensure this is the end date UNIX timestamp
+
+            // Updated subscription creation with correct billing_cycle_anchor and cancel_at
+            const subscription = await stripe.subscriptions.create({
+                customer: customer.id,
+                items: [{ price: price.id }],
+                default_payment_method: existingMethod.id,
+                billing_cycle_anchor: billing_cycle_anchor,
+                cancel_at: cancel_at,
+                metadata: {
+                    oppId: oppId,
+                },
+            });
+        }
+
         // If there is a Salesforce account ID, post payment details to Chatter
         if (salesforceAccountId) {
             await postToChatter(salesforceAccessToken, salesforceAccountId, product, amount);
@@ -192,6 +198,7 @@ async function processPayment(token, amount, email, firstName, lastName, product
         callback(error);
     }
 }
+
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
