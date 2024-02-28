@@ -164,25 +164,25 @@ async function processPayment(token, amount, email, firstName, lastName, product
           });
 
             const start = new Date(startDate);
-            const trialEnd = new Date(startDate);
-            trialEnd.setMonth(trialEnd.getMonth() + numberOfPayments); // Set trial end based on number of payments
+            const endDate = new Date(startDate); // Clone the start date
+            endDate.setMonth(endDate.getMonth() + numberOfPayments);
 
             const subscription = await stripe.subscriptions.create({
                 customer: customer.id,
                 items: [{ price: price.id }],
-                billing_cycle_anchor: Math.floor(start.getTime() / 1000),
-                trial_end: Math.floor(trialEnd.getTime() / 1000), // Convert trial end to Unix timestamp
+                billing_cycle_anchor: Math.floor(startDate.getTime() / 1000), // Set the start date
+                cancel_at: Math.floor(endDate.getTime() / 1000), // Set the end date
                 metadata: {
                     oppId: oppId // Include oppId in the metadata
                 },
             });
-
+          
             // Retrieve invoices generated for the subscription
             invoices = await stripe.invoices.list({
                 subscription: subscription.id,
             });
         }
-
+      
         // If there is a Salesforce account ID, post payment details to Chatter
         if (salesforceAccountId) {
             await postToChatter(salesforceAccessToken, salesforceAccountId, product, amount);
