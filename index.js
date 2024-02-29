@@ -181,6 +181,7 @@ async function processPayment(token, amount, email, firstName, lastName, product
                 items: [{ price: price.id }],
                 default_payment_method: existingMethod.id,
                 billing_cycle_anchor: billing_cycle_anchor,
+                collection_method='charge_automatically',
                 cancel_at: cancel_at,
                 metadata: {
                     oppId: oppId,
@@ -199,7 +200,6 @@ async function processPayment(token, amount, email, firstName, lastName, product
         callback(error);
     }
 }
-
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
