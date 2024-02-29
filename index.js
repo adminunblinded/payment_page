@@ -171,7 +171,7 @@ async function processPayment(token, amount, email, firstName, lastName, product
 
             // Stripe requires UNIX timestamps in seconds
             const cancel_at = Math.floor(endDate.getTime() / 1000); // Ensure this is the end date UNIX timestamp
-            const current_period_start=Math.floor(start.getTime() / 1000);
+            const billing_cycle_anchor=Math.floor(start.getTime() / 1000);
               
             console.log(`Cancel At (End Date): ${new Date(cancel_at * 1000).toISOString()}`);
 
@@ -180,7 +180,7 @@ async function processPayment(token, amount, email, firstName, lastName, product
                 customer: customer.id,
                 items: [{ price: price.id }],
                 default_payment_method: existingMethod.id,
-                current_period_start: current_period_start,
+                billing_cycle_anchor: billing_cycle_anchor,
                 cancel_at: cancel_at,
                 metadata: {
                     oppId: oppId,
