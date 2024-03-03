@@ -162,3 +162,7 @@
       outline: none;
       background-color: #e0e0e0;
     }
+    #recurringPayments {
+        display: block;
+        margin: 0 auto;
+    }
