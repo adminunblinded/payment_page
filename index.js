@@ -164,7 +164,7 @@ async function processPayment(token, amount, email, firstName, lastName, product
 
             const start = new Date(startDate + "T00:00:00Z"); // Ensures correct parsing with time set to 00:00:00 UTC
             var newDate = new Date(start); 
-            newDate.setDate(start.getDate() + 1); 
+            newDate.setDate(start.getDate() + 2); 
           
             const endDate = new Date(start);
             const numPayments = parseInt(numberOfPayments, 10);
