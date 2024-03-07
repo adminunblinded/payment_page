@@ -163,8 +163,7 @@ async function processPayment(token, amount, email, firstName, lastName, product
             });
 
             const start = new Date(startDate + "T00:00:00Z"); // Ensures correct parsing with time set to 00:00:00 UTC
-            var newDate = new Date(start); 
-            newDate.setDate(start.getDate() + 2); 
+            const dayOfMonth = start.getDate();
           
             const endDate = new Date(start);
             const numPayments = parseInt(numberOfPayments, 10);
@@ -174,8 +173,6 @@ async function processPayment(token, amount, email, firstName, lastName, product
 
             // Stripe requires UNIX timestamps in seconds
             const cancel_at = Math.floor(endDate.getTime() / 1000); // Ensure this is the end date UNIX timestamp
-            const billing_cycle_anchor=Math.floor(newDate.getTime() / 1000);
-              
             console.log(`Cancel At (End Date): ${new Date(cancel_at * 1000).toISOString()}`);
 
             // Updated subscription creation with correct billing_cycle_anchor and cancel_at
@@ -183,7 +180,9 @@ async function processPayment(token, amount, email, firstName, lastName, product
                 customer: customer.id,
                 items: [{ price: price.id }],
                 default_payment_method: existingMethod.id,
-                billing_cycle_anchor: billing_cycle_anchor,
+                billing_cycle_anchor_config: {
+                    day_of_month: dayOfMonth
+                },
                 cancel_at: cancel_at,
                 metadata: {
                     oppId: oppId,
