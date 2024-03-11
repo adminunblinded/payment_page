@@ -184,6 +184,7 @@ async function processPayment(token, amount, email, firstName, lastName, product
                     day_of_month: dayOfMonth
                 },
                 cancel_at: cancel_at,
+                trial_end: start,
                 metadata: {
                     oppId: oppId,
                 },
