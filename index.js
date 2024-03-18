@@ -23,7 +23,7 @@ const salesforceCredentials = {
   client_id: '3MVG9p1Q1BCe9GmBa.vd3k6U6tisbR1DMPjMzaiBN7xn.uqsguNxOYdop1n5P_GB1yHs3gzBQwezqI6q37bh9', // Replace with your Salesforce Consumer Key
   client_secret: '1AAD66E5E5BF9A0F6FCAA681ED6720A797AC038BC6483379D55C192C1DC93190', // Replace with your Salesforce Consumer Secret
   username: 'admin@unblindedmastery.com', // Your Salesforce username
-  password: 'Unblinded2023$', // Concatenate your password and security token
+  password: 'Unblinded2024$', // Concatenate your password and security token
 };
 
 const getSalesforceAccessToken = async () => {
